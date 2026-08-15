@@ -103,16 +103,32 @@ class OrderControllerTest {
 
     @Test
     @Order(4)
-    void testCreateOrder() {
+    void testCreateOrder() throws InterruptedException {
         Map<String, Object> body = Map.of("cartIds", List.of(cartId.intValue()), "remark", "测试下单-请尽快发货");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, authHeaders(buyerToken));
         ResponseEntity<Map> response = restTemplate.postForEntity(url("/api/orders"), entity, Map.class);
         assertEquals(200, response.getBody().get("code"));
         Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
-        orderId = ((Number) data.get("id")).longValue();
-        assertNotNull(orderId);
-        assertEquals(1, data.get("status"));
-        System.out.println("下单成功: orderId=" + orderId + ", 金额=" + data.get("totalAmount"));
+        String orderNo = (String) data.get("orderNo");
+        assertEquals("PROCESSING", data.get("status"));
+        assertNotNull(orderNo);
+
+        // 异步落库：轮询等消费者把订单写入，最多等 5 秒
+        Map<String, Object> order = null;
+        for (int i = 0; i < 10; i++) {
+            HttpEntity<Void> listEntity = new HttpEntity<>(authHeaders(buyerToken));
+            ResponseEntity<Map> listResp = restTemplate.exchange(
+                    url("/api/orders"), HttpMethod.GET, listEntity, Map.class);
+            List<Map> list = (List<Map>) listResp.getBody().get("data");
+            order = list.stream()
+                    .filter(o -> orderNo.equals(o.get("orderNo")))
+                    .findFirst().orElse(null);
+            if (order != null) break;
+            Thread.sleep(500);
+        }
+        assertNotNull(order, "异步下单未落库");
+        orderId = ((Number) order.get("id")).longValue();
+        assertEquals(1, order.get("status"));
     }
 
     @Test

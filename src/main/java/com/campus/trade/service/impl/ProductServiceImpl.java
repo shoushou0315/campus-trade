@@ -6,6 +6,7 @@ import com.campus.trade.dto.request.ProductQueryDTO;
 import com.campus.trade.dto.request.ProductSaveDTO;
 import com.campus.trade.entity.ProductDO;
 import com.campus.trade.entity.UserDO;
+import com.campus.trade.enums.ProductStatusEnum;
 import com.campus.trade.mapper.ProductMapper;
 import com.campus.trade.mapper.UserMapper;
 import com.campus.trade.service.CacheService;
@@ -85,7 +86,7 @@ public class ProductServiceImpl implements ProductService {
             if (product == null) {
                 return null;  // 空值标记，防穿透
             }
-            if (product.getStatus() == 0) {
+            if (product.getStatus() == ProductStatusEnum.OFF_SHELF.getCode()) {
                 throw new BusinessException("商品已下架");
             }
 
@@ -111,7 +112,7 @@ public class ProductServiceImpl implements ProductService {
         product.setImages(dto.getImages());
         product.setCampus(dto.getCampus());
         product.setCondition(dto.getCondition());
-        product.setStatus(1);
+        product.setStatus(ProductStatusEnum.ON_SALE.getCode());
 
         productMapper.insert(product);
         cacheService.bumpVersion(LIST_VERSION_KEY);  // 版本号自增，旧搜索缓存失效

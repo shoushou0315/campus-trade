@@ -1,7 +1,16 @@
 package com.campus.trade.entity;
 
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 
+/**
+ * 商品分类实体
+ *
+ * @author lu
+ * @since 2026-08-16
+ */
+@ToString
 public class CategoryDO {
 
     private Long id;

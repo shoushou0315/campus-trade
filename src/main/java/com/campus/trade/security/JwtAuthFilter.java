@@ -1,6 +1,7 @@
 package com.campus.trade.security;
 
 import com.campus.trade.entity.UserDO;
+import com.campus.trade.enums.UserStatusEnum;
 import com.campus.trade.mapper.UserMapper;
 import com.campus.trade.service.TokenService;
 import jakarta.servlet.FilterChain;
@@ -41,7 +42,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String role = jwtUtil.getRole(token);
 
             UserDO user = userMapper.selectByUsername(username);
-            if (user != null && user.getStatus() == 1) {
+            if (user != null && user.getStatus() == UserStatusEnum.ENABLED.getCode()) {
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 user, null,

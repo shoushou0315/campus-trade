@@ -14,9 +14,10 @@
 
 - 🔐 **双 Token + Redis 白名单**：access(15min) + refresh(7d)，登出即失效、改密吊销、单设备踢下线——解决纯 JWT 无法撤销的安全隐患
 - 🛡 **缓存高可用**：防穿透（空值标记）、防击穿（SETNX 互斥锁）、防雪崩（TTL 抖动）、版本号 O(1) 失效；Redis 故障自动降级直查 DB
-- 📦 **事务一致性**：下单 `@Transactional`（订单+明细+清购物车原子操作）+ 状态机校验流转
+- 📦 **RabbitMQ 异步下单（削峰）**：下单接口同步校验 + 发 MQ + 秒回，DB 落库由消费者异步执行；confirm/returns 回调 + 手动 ack + 死信兜底，`order_no` 幂等防重复
+- ⏱ **延迟关单（秒杀标配）**：TTL + 死信路由实现 15 分钟未支付自动取消；失败进死信（杜绝无限重试）+ 定时扫描兜底（双保险）
 - 🗃 **MyBatis 动态 SQL**：多条件分页搜索，表名白名单 + 参数化绑定防注入
-- 🧪 **35 个 JUnit 测试**全通过（认证/缓存/下单/权限全链路）
+- 🧪 **39 个 JUnit 测试**全通过（认证/缓存/下单/MQ 异步链路全覆盖）
 
 ---
 
@@ -29,6 +30,7 @@
 | JDK 21 | |
 | MySQL 8 | 库 `campus_trade`（`init_ddl.sql` 建表） |
 | Redis | 缓存 + Token 白名单 |
+| RabbitMQ | 异步下单 + 延迟关单（默认 localhost:5672） |
 
 ### 启动
 
@@ -53,7 +55,7 @@ mvn spring-boot:run
    │
    ├─ POST /api/auth/register|login → 签发 access + refresh → Redis 白名单
    ├─ GET  /api/products|{id}      → Redis 旁路缓存（防击穿/穿透/雪崩）
-   ├─ POST /api/orders              → @Transactional 下单
+   ├─ POST /api/orders              → 异步下单：同步校验 → 发 MQ → 秒回 orderNo
    └─ ... 带 access token 访问受保护接口
         │
         ▼
@@ -69,6 +71,17 @@ Controller → Service → MyBatis Mapper → MySQL
                     ├─ readThrough: 防穿透 + 防击穿（SETNX 锁）
                     ├─ put: TTL 随机抖动防雪崩
                     └─ bumpVersion: 版本号 O(1) 失效
+
+┌─────────────── RabbitMQ 消息链路 ───────────────┐
+│ POST /api/orders                                 │
+│   → OrderCreateProducer                          │
+│     ├─ order.create.queue ──→ 消费者异步落库     │
+│     │    （手动 ack，失败进 order.create.dlq）    │
+│     └─ order.delay.queue ──TTL 15min──→ 死信     │
+│          → order.cancel.queue ──→ 自动关单       │
+│              （失败进 order.cancel.dlq）          │
+│   └─ OrderScheduledTask 每5min扫超时订单兜底      │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -119,8 +132,11 @@ Controller → Service → MyBatis Mapper → MySQL
 ### 4. 购物车 & 订单
 
 - 加购自动合并数量（`UNIQUE(user_id, product_id)`）
-- 下单 `@Transactional`：校验商品 → 计算金额 → 插订单+明细 → 清购物车
-- 状态机：待接单(1) → 已接单(2) → 已完成(3)，取消(0) 各步骤校验角色与前置状态
+- **异步下单（MQ 削峰）**：接口同步校验（商品在售/同卖家）→ 发 `order.create.queue` + `order.delay.queue` → 秒回 orderNo；消费者异步 `@Transactional` 落库（订单+明细+清购物车）
+- **消息可靠性**：`publisher-confirm-type: correlated` 发送确认 + `mandatory` 路由失败回调 + 消费者手动 ack；失败进死信队列（`order.create.dlq` / `order.cancel.dlq`），`DlqMonitor` 记录告警
+- **幂等**：`order_no` 唯一约束 + 消费者先查后插，重复消息直接忽略
+- **延迟关单**：`order.delay.queue`（TTL 15min）→ 死信路由 → `order.cancel.queue` → 自动取消待接单订单；`OrderScheduledTask` 每 5 分钟扫库兜底（MQ 消息丢失也不漏单）
+- **状态机**：待接单(1) → 已接单(2) → 已完成(3)，取消(0) 各步骤校验角色与前置状态（`OrderStatusEnum` 枚举驱动）
 - 订单明细做商品快照（标题/价格/图片），不受后续修改影响
 
 ---
@@ -173,11 +189,12 @@ src/main/java/com/campus/trade/
 | AuthControllerTest | 9 | 注册/登录/刷新/登出/单设备/白名单 |
 | ProductControllerTest | 7 | 分类/搜索/详情/发布/缓存 |
 | ProductCacheTest | 3 | 缓存命中/空值标记/版本号 |
-| OrderControllerTest | 9 | 购物车→下单→接单→完成 |
+| OrderControllerTest | 9 | 购物车→异步下单→落库→接单→完成 |
+| MqOrderTest | 4 | MQ 连接/下单幂等/延迟关单/异常订单 |
 | UserMapperTest | 4 | MyBatis CRUD |
 | CampusTradeApplicationTest | 3 | 统一响应 |
 
-**35/35 全通过**
+**39/39 全通过**
 
 ---
 

@@ -1,9 +1,19 @@
 package com.campus.trade.entity;
 
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 订单明细实体（下单时商品快照）
+ *
+ * @author lu
+ * @since 2026-08-16
+ */
+@ToString
 public class OrderItemDO {
+
     private Long id;
     private Long orderId;
     private Long productId;

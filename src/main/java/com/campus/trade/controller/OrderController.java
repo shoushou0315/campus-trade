@@ -22,12 +22,14 @@ public class OrderController {
     }
 
     @PostMapping
-    public Result<OrderVO> create(@AuthenticationPrincipal UserDO user,
-                                   @RequestBody Map<String, Object> body) {
+    public Result<Map<String, Object>> create(@AuthenticationPrincipal UserDO user,
+                                              @RequestBody Map<String, Object> body) {
         List<Long> cartIds = ((List<Integer>) body.get("cartIds"))
                 .stream().map(Integer::longValue).toList();
         String remark = (String) body.getOrDefault("remark", null);
-        return Result.success(orderService.create(user.getId(), cartIds, remark));
+        // 异步下单：同步校验 + 发 MQ + 立即返回订单号（削峰）
+        String orderNo = orderService.createAsync(user.getId(), cartIds, remark);
+        return Result.success(Map.of("orderNo", orderNo, "status", "PROCESSING"));
     }
 
     @GetMapping

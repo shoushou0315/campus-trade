@@ -4,6 +4,7 @@ import com.campus.trade.common.exception.BusinessException;
 import com.campus.trade.dto.request.UserLoginDTO;
 import com.campus.trade.dto.request.UserRegisterDTO;
 import com.campus.trade.entity.UserDO;
+import com.campus.trade.enums.UserStatusEnum;
 import com.campus.trade.mapper.UserMapper;
 import com.campus.trade.service.TokenService;
 import com.campus.trade.service.UserService;
@@ -43,7 +44,7 @@ public class UserServiceImpl implements UserService {
         user.setPhone(dto.getPhone());
         user.setSchool(dto.getSchool());
         user.setRole("USER");
-        user.setStatus(1);
+        user.setStatus(UserStatusEnum.ENABLED.getCode());
 
         userMapper.insert(user);
         logger.info("用户{}注册成功", dto.getUsername());
@@ -57,7 +58,7 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户名或密码错误");
         }
-        if (user.getStatus() == 0) {
+            if (user.getStatus() == UserStatusEnum.DISABLED.getCode()) {
             throw new BusinessException("账号已被禁用");
         }
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {

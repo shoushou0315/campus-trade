@@ -13,6 +13,24 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        acknowledge-mode: manual       # 消费者手动 ack
+        retry:
+          enabled: false               # 手动重试，不用 Spring 默认重试
+    template:
+      mandatory: true                  # 消息不可达时触发 returns 回调
+    publisher-confirm-type: correlated # 发送方确认（confirm 回调）
+    publisher-returns: true
+    # 订单超时自动关单（MQ 延迟队列 TTL + 定时兜底共用）
+    order-timeout-ms: 900000
+    order-timeout-minutes: 15
+    timeout-scan-cron: 0 */5 * * * ?
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml

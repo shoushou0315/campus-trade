@@ -3,6 +3,7 @@ package com.campus.trade.service.impl;
 import com.campus.trade.common.exception.BusinessException;
 import com.campus.trade.entity.CartDO;
 import com.campus.trade.entity.ProductDO;
+import com.campus.trade.enums.ProductStatusEnum;
 import com.campus.trade.mapper.CartMapper;
 import com.campus.trade.mapper.ProductMapper;
 import com.campus.trade.service.CartService;
@@ -43,7 +44,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public void add(Long userId, Long productId, Integer quantity) {
         ProductDO product = productMapper.selectById(productId);
-        if (product == null || product.getStatus() != 1) {
+            if (product == null || product.getStatus() != ProductStatusEnum.ON_SALE.getCode()) {
             throw new BusinessException("商品不存在或已下架");
         }
         CartDO exist = cartMapper.selectByUserAndProduct(userId, productId);

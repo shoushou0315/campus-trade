@@ -1,8 +1,18 @@
 package com.campus.trade.entity;
 
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 
+/**
+ * 购物车实体
+ *
+ * @author lu
+ * @since 2026-08-16
+ */
+@ToString
 public class CartDO {
+
     private Long id;
     private Long userId;
     private Long productId;

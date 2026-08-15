@@ -41,4 +41,9 @@
     <update id="updateStatus">
         UPDATE orders SET status = #{status} WHERE id = #{id}
     </update>
+
+    <select id="selectPendingBefore" resultType="java.util.Map">
+        SELECT id, order_no FROM orders
+        WHERE status = 1 AND gmt_create &lt; #{deadline}
+    </select>
 </mapper>

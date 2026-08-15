@@ -1,8 +1,17 @@
 package com.campus.trade.entity;
 
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 商品实体
+ *
+ * @author lu
+ * @since 2026-08-16
+ */
+@ToString
 public class ProductDO {
 
     private Long id;

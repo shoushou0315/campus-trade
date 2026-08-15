@@ -1,7 +1,16 @@
 package com.campus.trade.entity;
 
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 
+/**
+ * 订单实体
+ *
+ * @author lu
+ * @since 2026-08-16
+ */
+@ToString
 public class OrderDO {
     private Long id;
     private String orderNo;
