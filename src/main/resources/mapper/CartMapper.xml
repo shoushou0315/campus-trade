@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.trade.mapper.CartMapper">
+    <resultMap id="cartMap" type="com.campus.trade.entity.CartDO">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="isSelected" column="is_selected"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <select id="selectByUserId" resultMap="cartMap">
+        SELECT id, user_id, product_id, quantity, is_selected, gmt_create, gmt_modified
+        FROM cart WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectByUserAndProduct" resultMap="cartMap">
+        SELECT id, user_id, product_id, quantity, is_selected, gmt_create, gmt_modified
+        FROM cart WHERE user_id = #{userId} AND product_id = #{productId}
+    </select>
+
+    <select id="selectByIds" resultMap="cartMap">
+        SELECT id, user_id, product_id, quantity, is_selected, gmt_create, gmt_modified
+        FROM cart WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cart (user_id, product_id, quantity, is_selected) VALUES (#{userId}, #{productId}, #{quantity}, #{isSelected})
+    </insert>
+
+    <update id="update">
+        UPDATE cart SET quantity = #{quantity}, is_selected = #{isSelected} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM cart WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByUserId">
+        DELETE FROM cart WHERE user_id = #{userId}
+    </delete>
+</mapper>

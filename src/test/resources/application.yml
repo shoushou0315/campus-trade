@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: campus-trade
+  datasource:
+    url: jdbc:mysql://localhost:3306/campus_trade?useSSL=false&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:rootpassword}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: never
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.campus.trade.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  rate-limit:
+    enabled: false
+
+jwt:
+  secret: ${JWT_SECRET:dGVzdC1zZWNyZXQta2V5LWZvci1qd3QtdGVzdGluZy1wdXJwb3Nlcy1vbmx5LTIwMjU=}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}

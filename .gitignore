@@ -1,0 +1,20 @@
+# 面试用详细文档（不对公开放）
+DETAIL.md
+
+# 运行时数据
+target/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+
+# 本地配置（勿提交真实密钥）
+application-local.yml
+*.local

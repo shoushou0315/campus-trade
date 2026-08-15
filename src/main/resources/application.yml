@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: campus-trade
+  datasource:
+    url: jdbc:mysql://localhost:3306/campus_trade?useSSL=false&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:rootpassword}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.campus.trade.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# JWT（本地请通过环境变量 JWT_SECRET 注入，勿提交真实密钥）
+jwt:
+  secret: ${JWT_SECRET:Y2FtcHVzLXRyYWRlLWp3dC1zZWNyZXQta2V5LXByb2R1Y3Rpb24tMjAyNQ==}
+  access-expiration: ${JWT_ACCESS_EXPIRATION:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# Swagger
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.trade.mapper.OrderMapper">
+    <resultMap id="orderMap" type="com.campus.trade.entity.OrderDO">
+        <id property="id" column="id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="buyerId" column="buyer_id"/>
+        <result property="sellerId" column="seller_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (order_no, buyer_id, seller_id, total_amount, status, remark)
+        VALUES (#{orderNo}, #{buyerId}, #{sellerId}, #{totalAmount}, #{status}, #{remark})
+    </insert>
+
+    <select id="selectById" resultMap="orderMap">
+        SELECT id, order_no, buyer_id, seller_id, total_amount, status, remark, gmt_create, gmt_modified
+        FROM orders WHERE id = #{id}
+    </select>
+
+    <select id="selectByOrderNo" resultMap="orderMap">
+        SELECT id, order_no, buyer_id, seller_id, total_amount, status, remark, gmt_create, gmt_modified
+        FROM orders WHERE order_no = #{orderNo}
+    </select>
+
+    <select id="selectByBuyerId" resultMap="orderMap">
+        SELECT id, order_no, buyer_id, seller_id, total_amount, status, remark, gmt_create, gmt_modified
+        FROM orders WHERE buyer_id = #{buyerId} ORDER BY gmt_create DESC
+    </select>
+
+    <select id="selectBySellerId" resultMap="orderMap">
+        SELECT id, order_no, buyer_id, seller_id, total_amount, status, remark, gmt_create, gmt_modified
+        FROM orders WHERE seller_id = #{sellerId} ORDER BY gmt_create DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE orders SET status = #{status} WHERE id = #{id}
+    </update>
+</mapper>

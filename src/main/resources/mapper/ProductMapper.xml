@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.trade.mapper.ProductMapper">
+
+    <resultMap id="productResultMap" type="com.campus.trade.entity.ProductDO">
+        <id property="id" column="id"/>
+        <result property="sellerId" column="seller_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+        <result property="originalPrice" column="original_price"/>
+        <result property="images" column="images"/>
+        <result property="campus" column="campus"/>
+        <result property="condition" column="condition"/>
+        <result property="status" column="status"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="collectCount" column="collect_count"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <sql id="searchColumns">
+        id, seller_id, category_id, title, description, price, original_price,
+        images, campus, `condition`, status, view_count, collect_count, gmt_create, gmt_modified
+    </sql>
+
+    <select id="search" resultMap="productResultMap">
+        SELECT <include refid="searchColumns"/>
+        FROM product
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="campus != null and campus != ''">
+                AND campus = #{campus}
+            </if>
+            <if test="minPrice != null">
+                AND price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
+            <if test="condition != null">
+                AND `condition` = #{condition}
+            </if>
+            AND status = 1
+        </where>
+        <choose>
+            <when test="sortBy == 'price_asc'">ORDER BY price ASC</when>
+            <when test="sortBy == 'price_desc'">ORDER BY price DESC</when>
+            <when test="sortBy == 'newest'">ORDER BY gmt_create DESC</when>
+            <otherwise>ORDER BY gmt_create DESC</otherwise>
+        </choose>
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countSearch" resultType="int">
+        SELECT COUNT(*)
+        FROM product
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="campus != null and campus != ''">
+                AND campus = #{campus}
+            </if>
+            <if test="minPrice != null">
+                AND price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
+            <if test="condition != null">
+                AND `condition` = #{condition}
+            </if>
+            AND status = 1
+        </where>
+    </select>
+
+    <select id="selectById" resultMap="productResultMap">
+        SELECT <include refid="searchColumns"/>
+        FROM product
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.campus.trade.entity.ProductDO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product (seller_id, category_id, title, description, price, original_price, images, campus, `condition`, status)
+        VALUES (#{sellerId}, #{categoryId}, #{title}, #{description}, #{price}, #{originalPrice}, #{images}, #{campus}, #{condition}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.campus.trade.entity.ProductDO">
+        UPDATE product
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="originalPrice != null">original_price = #{originalPrice},</if>
+            <if test="images != null">images = #{images},</if>
+            <if test="campus != null">campus = #{campus},</if>
+            <if test="condition != null">`condition` = #{condition},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE product SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <update id="incrementViewCount">
+        UPDATE product SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+</mapper>
